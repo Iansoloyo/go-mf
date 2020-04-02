@@ -82,7 +82,7 @@ func ClientDeployContract(client *mcclient.Client ,keystore string,password stri
 	gasLimit := uint64(9000000) // in units
 	//2.set value (fst)
 	value := new(big.Int)
-	value.SetString("500000000000000000", 10)
+	value.SetString("10000000000000000000", 10)
 	//3 get nonce
 	nonce, err := client.PendingNonceAt(context.Background(), common.Address(common.HexToAddress(address)))
 	if err != nil {
@@ -161,4 +161,118 @@ func ClientFlush(client *mcclient.Client ,keystore string,password string, contr
 
 	return tx.Hash().Hex(),nil
 }
+
+
+func DistributeGasFee(client *mcclient.Client ,keystore string,password string, contract string) (txHash string,err error){
+	privateKey,err :=GetPrivateKey(keystore,password)
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+	//load privateKey
+	key, err := crypto.HexToECDSA(privateKey)
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+	publicKey := key.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Error("error casting public key to ECDSA")
+		return "",err
+	}
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
+	nonce, err := client.PendingNonceAt(context.Background(), common.HexToAddress(address))
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+
+	//auth, err := bind.NewTransactor(strings.NewReader(keystore), password)
+	auth := bind.NewKeyedTransactor(key)
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)
+	auth.GasLimit = big.NewInt(int64(3000000))
+	auth.GasPrice = gasPrice
+	contractAddress := common.HexToAddress(contract)
+	instance, err := NewAppChainBase(contractAddress, client)
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+
+	tx, err := instance.DistributeGasFee(auth)
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+
+	return tx.Hash().Hex(),nil
+}
+
+
+
+
+func AddFund(client *mcclient.Client ,keystore string,password string, contract string) (txHash string,err error){
+	privateKey,err :=GetPrivateKey(keystore,password)
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+	//load privateKey
+	key, err := crypto.HexToECDSA(privateKey)
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+	publicKey := key.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Error("error casting public key to ECDSA")
+		return "",err
+	}
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
+	nonce, err := client.PendingNonceAt(context.Background(), common.HexToAddress(address))
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+
+	//auth, err := bind.NewTransactor(strings.NewReader(keystore), password)
+	auth := bind.NewKeyedTransactor(key)
+	auth.Nonce = big.NewInt(int64(nonce))
+	value := new(big.Int)
+	value.SetString("10000000000000000000", 10)
+	auth.GasLimit = big.NewInt(int64(3000000))
+	auth.GasPrice = gasPrice
+	contractAddress := common.HexToAddress(contract)
+	instance, err := NewAppChainBase(contractAddress, client)
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+
+	tx, err := instance.AddFund(auth)
+	if err != nil {
+		log.Error(err.Error())
+		return "",err
+	}
+
+	return tx.Hash().Hex(),nil
+}
+
 

@@ -222,7 +222,7 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	}
 	// signedTx, err := opts.Signer(types.PanguSigner{}, opts.From, rawTx)
 	//TODO
-	signedTx, err := opts.Signer(types.NewPanguSigner(big.NewInt(99)), opts.From, rawTx)
+	signedTx, err := opts.Signer(types.NewPanguSigner(big.NewInt(101)), opts.From, rawTx)
 	if err != nil {
 		return nil, err
 	}

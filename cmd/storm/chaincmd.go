@@ -315,11 +315,33 @@ func initGenesis(ctx *cli.Context) error {
 		if err != nil {
 			utils.Fatalf("Client Deploy Contract error", err)
 		}
+		fmt.Printf("\nwait for AppChainBase depolyed...(60 second)\n\n")
+		time.Sleep(time.Duration(60)*time.Second)
 		fmt.Printf("\nYour contract has depolyed\n\n")
 		fmt.Printf("Contract address is:   %s\n", contract)
 		fmt.Printf("Transaction hash is: %s\n", tx)
 
-
+		for {
+			txHash, err := chain3go.DistributeGasFee(client, string(keystore), parentContext.String("password"), contract)
+			if err != nil {
+				fmt.Printf("\nwait for AppChainBase DistributeGasFee...\n\n")
+				time.Sleep(time.Duration(10)*time.Second)
+			}else {
+				fmt.Printf("\nAppChainBase DistributeGasFee success，Transaction hash is:%s\n\n", txHash)
+				break
+			}
+		}
+		time.Sleep(time.Duration(10)*time.Second)
+		for {
+			txHash, err := chain3go.AddFund(client, string(keystore), parentContext.String("password"), contract)
+			if err != nil {
+				fmt.Printf("\nwait for AppChainBase AddFund...\n\n")
+				time.Sleep(time.Duration(10)*time.Second)
+			}else {
+				fmt.Printf("\nAppChainBase AddFund success，Transaction hash is:%s\n\n", txHash)
+				break
+			}
+		}
 	}else {
 		file, err := os.Open(genesisPath)
 		if err != nil {
